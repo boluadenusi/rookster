@@ -124,7 +124,7 @@ test('the homepage and its live featured reports render', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Chess ratings/i })).toBeVisible()
   await expect(page.locator('.card-generation-count')).toContainText('1,234')
   await expect(page.locator('.card-generation-count')).toContainText('scout cards generated')
-  await expect(page.getByRole('link', { name: /Open MagnusCarlsen's scout report/i }).first()).toBeAttached()
+  await expect(page.getByRole('link', { name: /Open MagnusCarlsen's scout report/i }).first()).toHaveAttribute('href', '/MagnusCarlsen')
 })
 
 test('a successful homepage submission records one unique generation event', async ({ page }) => {
@@ -134,6 +134,7 @@ test('a successful homepage submission records one unique generation event', asy
   await page.locator('.generator-form input').first().fill('tester')
   await page.getByRole('button', { name: /Scout player/i }).click()
   await expect(page.getByRole('heading', { name: /scouting report is in/i })).toBeVisible()
+  await expect(page).toHaveURL('/tester')
   await expect.poll(() => tally.posts.length).toBe(1)
   expect(tally.posts[0].cardCount).toBe(1)
   expect(tally.posts[0].eventId).toMatch(/^[a-z0-9-]{16,80}$/i)
@@ -144,7 +145,7 @@ test('a remembered player pack restores and format tabs switch immediately', asy
   await page.addInitScript(() => {
     localStorage.setItem('rookster:pack-open:v1:tester', String(Date.now()))
   })
-  await page.goto('/card/tester')
+  await page.goto('/tester')
 
   const card = page.locator('article.player-card')
   await expect(card).toBeVisible()
@@ -155,9 +156,34 @@ test('a remembered player pack restores and format tabs switch immediately', asy
   expect(tally.posts).toHaveLength(0)
 })
 
+test('card exports offer clean, square, and vertical story PNG layouts', async ({ page }) => {
+  test.setTimeout(90_000)
+  await mockRooksterData(page)
+  await page.addInitScript(() => {
+    localStorage.setItem('rookster:pack-open:v1:tester', String(Date.now()))
+  })
+  await page.goto('/tester')
+  await expect(page.locator('article.player-card')).toBeVisible()
+
+  const layout = page.getByLabel('Player card layout')
+  await expect(layout.locator('option')).toHaveText(['Clean card', 'Square post', 'Vertical story'])
+
+  for (const [value, filename] of [
+    ['plain', 'tester-rapid-rookster-card.png'],
+    ['square', 'tester-rapid-rookster-square.png'],
+    ['story', 'tester-rapid-rookster-story.png'],
+  ]) {
+    await layout.selectOption(value)
+    const downloadPromise = page.waitForEvent('download')
+    await page.getByRole('button', { name: /Download/ }).click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toBe(filename)
+  }
+})
+
 test('comparison routes render both cards and the core matchup metrics', async ({ page }) => {
   await mockRooksterData(page, { rapidSpecialistComparison: true })
-  await page.goto('/card/tester?compare=rival')
+  await page.goto('/tester?compare=rival')
 
   await expect(page.locator('article.player-card')).toHaveCount(2)
   await expect(page.getByText('SCOUTING METRICS')).toBeVisible()
@@ -167,8 +193,15 @@ test('comparison routes render both cards and the core matchup metrics', async (
   await expect(page).toHaveTitle(/tester 1800 \(v rival 1800\)/i)
 })
 
-test('unknown routes use the branded 404 page', async ({ page }) => {
-  await page.goto('/missing-fixture')
+test('legacy card routes redirect to the canonical profile URL', async ({ page }) => {
+  await mockRooksterData(page)
+  await page.goto('/card/tester?compare=rival')
+
+  await expect(page).toHaveURL('/tester?compare=rival')
+})
+
+test('unknown multi-segment routes use the branded 404 page', async ({ page }) => {
+  await page.goto('/missing/fixture')
 
   await expect(page).toHaveTitle(/Page not found/i)
   await expect(page.getByRole('heading', { name: /fixture isn't on the board/i })).toBeVisible()

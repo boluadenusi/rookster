@@ -135,7 +135,7 @@ export default function HomepageSpecimens() {
               </div>
               <Link
                 className="homepage-specimen-link"
-                to={`/card/${encodeURIComponent(specimen.profile.username)}`}
+                to={`/${encodeURIComponent(specimen.profile.username)}`}
                 state={{ scoutingEntry: 'homepage-card' }}
                 aria-label={`Open ${specimen.profile.username}'s scout report`}
                 tabIndex={isClone ? -1 : 0}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, Copy, Download, LoaderCircle } from 'lucide-react'
+import { CARD_EXPORTS } from '../utils/cardExport.js'
 
 export default function ShareActions({
   username,
@@ -10,10 +11,10 @@ export default function ShareActions({
   showExport = true,
 }) {
   const [copied, setCopied] = useState(false)
-  const [format, setFormat] = useState('png')
+  const [exportMode, setExportMode] = useState('plain')
 
   async function copyLink() {
-    const path = `/card/${encodeURIComponent(username)}`
+    const path = `/${encodeURIComponent(username)}`
     const query = compareUsername ? `?compare=${encodeURIComponent(compareUsername)}` : ''
     const url = `${window.location.origin}${path}${query}`
 
@@ -49,26 +50,26 @@ export default function ShareActions({
         {showExport && (
           <div className="export-actions">
             <label className="export-format">
-              <span className="sr-only">Player card format</span>
+              <span className="sr-only">Player card layout</span>
               <select
-                value={format}
-                onChange={(event) => setFormat(event.target.value)}
+                value={exportMode}
+                onChange={(event) => setExportMode(event.target.value)}
                 disabled={isDownloading || !canDownload}
-                aria-label="Player card format"
+                aria-label="Player card layout"
               >
-                <option value="png">PNG</option>
-                <option value="jpg">JPG</option>
-                <option value="webp">WebP</option>
+                {Object.entries(CARD_EXPORTS).map(([value, option]) => (
+                  <option value={value} key={value}>{option.label}</option>
+                ))}
               </select>
             </label>
             <button
               type="button"
               className="download-button"
-              onClick={() => onDownload(format)}
+              onClick={() => onDownload(exportMode)}
               disabled={isDownloading || !canDownload}
             >
               {isDownloading ? <LoaderCircle className="spin" size={18} /> : <Download size={18} />}
-              {isDownloading ? 'Exporting...' : canDownload ? `Download ${format.toUpperCase()}` : 'Open player pack'}
+              {isDownloading ? 'Exporting...' : canDownload ? CARD_EXPORTS[exportMode].buttonLabel : 'Open player pack'}
             </button>
           </div>
         )}

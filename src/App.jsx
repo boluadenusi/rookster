@@ -1,5 +1,4 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { toCanvas, toJpeg, toPng } from 'html-to-image'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowRight,
@@ -37,13 +36,12 @@ import {
   summarizeRecentGames,
 } from './utils.js'
 import { getCardTier } from './utils/cardTier.js'
+import { CARD_EXPORTS, renderCardExport } from './utils/cardExport.js'
 import { getOpeningStyle } from './utils/openingStyle.js'
 import { isPackOpenRemembered, rememberPackOpened } from './utils/packState.js'
 import { resolvePosition } from './utils/position.js'
 import useDocumentTitle from './utils/useDocumentTitle.js'
 
-const TRANSPARENT_PIXEL =
-  'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
 const REQUEST_TIMEOUT_MS = 3 * 60 * 1000
 const HEAD_TO_HEAD_TIMEOUT_MS = 30 * 1000
 const HOME_TITLE = 'rookster | Chess ratings, made iconic.'
@@ -504,7 +502,7 @@ function App() {
 
       const primaryUsername = primary.profile.username ?? chessName
       const opponentUsername = opponent?.profile.username ?? opponentName
-      const profilePath = `/card/${encodeURIComponent(primaryUsername)}`
+      const profilePath = `/${encodeURIComponent(primaryUsername)}`
       const comparisonQuery = opponentUsername
         ? `?compare=${encodeURIComponent(opponentUsername)}`
         : ''
@@ -581,34 +579,20 @@ function App() {
     })
   }
 
-  async function downloadCard(format = 'png') {
+  async function downloadCard(mode = 'plain') {
     if (!exportRef.current || !playerData || !packOpened) return
     setIsDownloading(true)
     try {
-      const exportOptions = {
-        cacheBust: true,
-        pixelRatio: 2,
-        imagePlaceholder: TRANSPARENT_PIXEL,
-      }
-      let dataUrl
-
-      if (format === 'jpg') {
-        dataUrl = await toJpeg(exportRef.current, {
-          ...exportOptions,
-          backgroundColor: '#000000',
-          quality: 0.94,
-        })
-      } else if (format === 'webp') {
-        const canvas = await toCanvas(exportRef.current, exportOptions)
-        dataUrl = canvas.toDataURL('image/webp', 0.92)
-      } else {
-        dataUrl = await toPng(exportRef.current, exportOptions)
-      }
-
+      const exportMode = CARD_EXPORTS[mode] ? mode : 'plain'
+      const canvas = await renderCardExport(
+        exportRef.current,
+        exportMode,
+        playerData.profile.username,
+      )
       const suffix = comparisonData ? `-vs-${comparisonData.profile.username}` : ''
       const link = document.createElement('a')
-      link.download = `${playerData.profile.username}${suffix}-${selectedControl.id}-rookster.${format}`
-      link.href = dataUrl
+      link.download = `${playerData.profile.username}${suffix}-${selectedControl.id}-rookster-${CARD_EXPORTS[exportMode].fileSuffix}.png`
+      link.href = canvas.toDataURL('image/png')
       link.click()
     } catch {
       setError({
@@ -643,7 +627,7 @@ function App() {
         <section className="hero" id="top">
           <div className="hero-left">
             <div className="hero-copy">
-              <div className="eyebrow">Control the centre. Own the midfield.</div>
+              <div className="eyebrow">Control the midfield</div>
               <h1>
                 Chess ratings,<br />
                 <em>made iconi<span className="iconic-c">c<Crown className="iconic-crown" aria-hidden="true" /></span>.</em>
@@ -658,7 +642,7 @@ function App() {
                   required
                   value={chessUsername}
                   onChange={(event) => setChessUsername(event.target.value)}
-                  placeholder="e.g. hikaru"
+                  placeholder="Enter a Chess.com username"
                   autoComplete="off"
                   spellCheck="false"
                 />

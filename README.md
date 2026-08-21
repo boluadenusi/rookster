@@ -53,8 +53,8 @@ npm run preview
 - Changes the card finish across bronze, silver, gold, and special OVR tiers.
 - Supports two-player comparisons, Puzzle Rush skill moves, six-stat position inference, opening-style verdict flavor, and a pack-opening reveal.
 - Adds a selected-time-control scouting report with rating, form percentages, activity, tactics, and Puzzle Rush context.
-- Exports the card as a high-resolution PNG, JPG, or WebP image with `html-to-image`.
-- Regenerates live cards from shareable URLs such as `/card/hikaru` and optional comparisons such as `?compare=MagnusCarlsen`.
+- Exports the card as a clean PNG, branded square post, or vertical story graphic with player and Rookster attribution.
+- Regenerates live cards from shareable URLs such as `/hikaru` and optional comparisons such as `?compare=MagnusCarlsen`. Legacy `/card/username` links redirect to the canonical profile URL.
 - Explains the scouting model in plain language at `/how-it-works`.
 
 No login or Chess.com API key is required. The aggregation endpoint needs the two server-only Upstash variables shown above; never expose them through `VITE_` variables or client code.
@@ -93,4 +93,4 @@ The app depends on public Chess.com data and images. Network errors and API rate
 
 ### SPA fallback for share links
 
-Direct browser loads of `/card/username` or `/how-it-works` must be rewritten to `index.html` by the chosen host while `/api/*` remains routed to the Node-compatible backend function. Configure production security headers at that same host boundary.
+Direct browser loads of `/username`, legacy `/card/username` links, or `/how-it-works` must be rewritten to `index.html` by the chosen host while `/api/*` remains routed to the Node-compatible backend function. Configure production security headers at that same host boundary.

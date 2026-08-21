@@ -486,6 +486,14 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
 .pack-reveal.is-restored .revealed-cards { visibility: visible; opacity: 1; transform: none; animation: none; }
 .pack-reveal.is-restored .player-card::after { content: none; animation: none; }
 .cards-export { display: flex; width: max-content; gap: 32px; padding: 0; background: transparent; }
+.cards-export.is-exporting .player-card {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --card-scale: 1;
+  margin: 0 !important;
+  transform: none !important;
+  filter: none;
+}
 @keyframes packShine { 0%, 30% { transform: translateX(-160%) rotate(22deg); } 70%, 100% { transform: translateX(160%) rotate(22deg); } }
 @keyframes packOpenExit {
   from { opacity: 1; transform: translateY(0) scale(1); }
@@ -588,7 +596,7 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
 .copy-button { height: 42px; padding: 0 14px; border: 1px solid rgba(255,255,255,.14); background: transparent; color: #c3ccc8; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; font-weight: 700; font-size: 10px; }
 .copy-button:hover { border-color: rgba(200,244,90,.55); color: var(--acid); }
 .export-actions { display: flex; gap: 10px; min-width: 0; }
-.export-format select { height: 42px; min-width: 73px; padding: 0 23px 0 11px; border: 1px solid rgba(255,255,255,.14); border-radius: 0; background: #080808; color: rgba(244,241,233,.68); cursor: pointer; font: 600 10px 'DM Mono'; letter-spacing: .04em; text-transform: uppercase; }
+.export-format select { height: 42px; min-width: 132px; padding: 0 27px 0 11px; border: 1px solid rgba(255,255,255,.14); border-radius: 0; background: #080808; color: rgba(244,241,233,.68); cursor: pointer; font: 600 10px 'DM Mono'; letter-spacing: .04em; text-transform: uppercase; }
 .export-format select:disabled { cursor: not-allowed; opacity: .5; }
 .export-format option { background: #080808; color: #f4f1e9; }
 
