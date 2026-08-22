@@ -66,6 +66,28 @@ test('uses 75 and 64 as inclusive trait boundaries while leaving 65-74 neutral',
   assert.deepEqual(profile.development.map((trait) => trait.label), ['DRI'])
 })
 
+test('moves trait boundaries with OVR while retaining an elite strength ceiling', () => {
+  const standard = selectScoutingTraits(attributes({
+    PAC: 80,
+    SHO: 79,
+    PAS: 70,
+    DRI: 69,
+  }), 75)
+  const elite = selectScoutingTraits(attributes({
+    PAC: 94,
+    SHO: 93,
+    PAS: 89,
+    DRI: 88,
+    DEF: 89,
+    PHY: 89,
+  }), 94)
+
+  assert.deepEqual(standard.strengths.map((trait) => trait.label), ['PAC'])
+  assert.deepEqual(standard.development.map((trait) => trait.label), ['DRI'])
+  assert.deepEqual(elite.strengths.map((trait) => trait.label), ['PAC'])
+  assert.deepEqual(elite.development.map((trait) => trait.label), ['DRI'])
+})
+
 test('returns no trait entries when all attributes sit in the neutral band', () => {
   const profile = selectScoutingTraits(attributes({
     PAC: 70,
@@ -117,10 +139,10 @@ test('uses fixed attribute priority only after both value and evidence tie', () 
 
 test('avoids standout wording when qualifying strengths do not separate from the pack', () => {
   const profile = getScoutingProfile(stats, control, 'CAM', {
-    PAC: 75,
-    PAS: 75,
-    DRI: 75,
-    DEF: 75,
+    PAC: 95,
+    PAS: 95,
+    DRI: 95,
+    DEF: 95,
   })
 
   assert.match(profile.verdict, /lead the attribute board/)

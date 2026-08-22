@@ -12,6 +12,9 @@ const ATTRIBUTE_COPY = {
 
 const STRENGTH_THRESHOLD = 75
 const DEVELOPMENT_THRESHOLD = 64
+const RELATIVE_STRENGTH_MARGIN = 5
+const RELATIVE_DEVELOPMENT_MARGIN = 6
+const ELITE_STRENGTH_CEILING = 94
 const STANDOUT_MARGIN = 3
 const ATTRIBUTE_PRIORITY = ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY']
 
@@ -80,10 +83,22 @@ function strengthsStandApart(strengths, attributes) {
     || Math.min(...strengths.map((attribute) => attribute.value)) - highestOutside >= STANDOUT_MARGIN
 }
 
-export function selectScoutingTraits(attributes = []) {
+function getTraitThresholds(ovr) {
+  if (!Number.isFinite(ovr)) {
+    return { strength: STRENGTH_THRESHOLD, development: DEVELOPMENT_THRESHOLD }
+  }
+
+  return {
+    strength: Math.min(ELITE_STRENGTH_CEILING, ovr + RELATIVE_STRENGTH_MARGIN),
+    development: Math.max(40, ovr - RELATIVE_DEVELOPMENT_MARGIN),
+  }
+}
+
+export function selectScoutingTraits(attributes = [], ovr) {
   const decorated = attributes.map(decorateAttribute)
+  const thresholds = getTraitThresholds(ovr)
   const strengths = decorated
-    .filter((attribute) => attribute.value >= STRENGTH_THRESHOLD)
+    .filter((attribute) => attribute.value >= thresholds.strength)
     .sort((left, right) => (
       right.value - left.value
       || right.evidenceConfidence - left.evidenceConfidence
@@ -91,7 +106,7 @@ export function selectScoutingTraits(attributes = []) {
     ))
     .slice(0, 2)
   const development = decorated
-    .filter((attribute) => attribute.value <= DEVELOPMENT_THRESHOLD)
+    .filter((attribute) => attribute.value <= thresholds.development)
     .sort((left, right) => (
       left.value - right.value
       || right.evidenceConfidence - left.evidenceConfidence
@@ -152,7 +167,7 @@ function buildVerdict(strengths, development, strengthsAreDistinct, control, sam
 export function getScoutingProfile(stats, control, position, attributeStats, openingStyle) {
   const card = buildCardStats(stats, control, attributeStats)
   const archetype = getPlayerArchetype(stats, position)
-  const { strengths, development, strengthsAreDistinct } = selectScoutingTraits(card.attributes)
+  const { strengths, development, strengthsAreDistinct } = selectScoutingTraits(card.attributes, card.ovr)
   const sampleGames = Number.isFinite(attributeStats?.sampleGames)
     ? attributeStats.sampleGames
     : card.total

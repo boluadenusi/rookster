@@ -8,6 +8,10 @@ export const CONTROLS = [
 
 export const clamp = (value, min = 40, max = 95) => Math.min(max, Math.max(min, value))
 
+const ATTRIBUTE_OVR_OFFSET = -2
+const ATTRIBUTE_RAW_CENTER = 75
+const ATTRIBUTE_CONTRAST = 0.5
+
 export function ratingToOvr(rating) {
   if (rating <= 100) return 45
 
@@ -16,6 +20,17 @@ export function ratingToOvr(rating) {
     : 75 + 20 * Math.sqrt((rating - 1500) / (3100 - 1500))
 
   return clamp(Math.round(value))
+}
+
+export function calibrateAttributeToOvr(rawValue, ovr) {
+  const safeRawValue = Number.isFinite(rawValue) ? clamp(rawValue) : ATTRIBUTE_RAW_CENTER
+  const safeOvr = Number.isFinite(ovr) ? clamp(ovr) : ATTRIBUTE_RAW_CENTER
+
+  return clamp(Math.round(
+    safeOvr
+    + ATTRIBUTE_OVR_OFFSET
+    + ATTRIBUTE_CONTRAST * (safeRawValue - ATTRIBUTE_RAW_CENTER),
+  ))
 }
 
 function ratingToLegacyAttribute(rating) {
@@ -143,53 +158,57 @@ export function buildCardStats(stats, control, cachedAttributes = null) {
   )
   const cachedEvidence = (label, fallback) => cachedAttributes?.evidence?.[label] ?? fallback
   const shooting = getShootingAttribute(rating, tacticsRating)
+  const rawAttributes = [
+    {
+      label: 'PAC',
+      value: cachedValue('PAC', ratingToLegacyAttribute(bulletOrBlitz)),
+      evidence: cachedEvidence('PAC', { source: 'rating-fallback', sampleSize: 0 }),
+    },
+    {
+      label: 'SHO',
+      value: shooting.value,
+      evidence: Number.isFinite(tacticsRating)
+        ? {
+            source: shooting.source,
+            rating: tacticsRating,
+            sampleSize: 1,
+            confidence: shooting.confidence,
+          }
+        : { source: 'selected-rating-fallback', rating, sampleSize: 0 },
+    },
+    {
+      label: 'PAS',
+      value: cachedValue('PAS', clamp(Math.round(40 + winRate * 0.6))),
+      evidence: cachedEvidence('PAS', { source: 'win-rate-fallback', sampleSize: total }),
+    },
+    {
+      label: 'DRI',
+      value: cachedValue('DRI', ratingToLegacyAttribute(blitz)),
+      evidence: cachedEvidence('DRI', { source: 'rating-fallback', sampleSize: 0 }),
+    },
+    {
+      label: 'DEF',
+      value: cachedValue('DEF', clamp(Math.round(40 + (100 - lossRate) * 0.6))),
+      evidence: cachedEvidence('DEF', { source: 'overall-record', sampleSize: 0, totalGames: total }),
+    },
+    {
+      label: 'PHY',
+      value: clamp(Math.round(
+        40 + 55 * (Math.log1p(Math.min(total, 2000)) / Math.log1p(2000)),
+      )),
+      evidence: { source: 'appearances', sampleSize: total },
+    },
+  ]
 
   return {
     rating,
     peak: selected.best?.rating,
     ovr,
     total,
-    attributes: [
-      {
-        label: 'PAC',
-        value: cachedValue('PAC', ratingToLegacyAttribute(bulletOrBlitz)),
-        evidence: cachedEvidence('PAC', { source: 'rating-fallback', sampleSize: 0 }),
-      },
-      {
-        label: 'SHO',
-        value: shooting.value,
-        evidence: Number.isFinite(tacticsRating)
-          ? {
-              source: shooting.source,
-              rating: tacticsRating,
-              sampleSize: 1,
-              confidence: shooting.confidence,
-            }
-          : { source: 'selected-rating-fallback', rating, sampleSize: 0 },
-      },
-      {
-        label: 'PAS',
-        value: cachedValue('PAS', clamp(Math.round(40 + winRate * 0.6))),
-        evidence: cachedEvidence('PAS', { source: 'win-rate-fallback', sampleSize: total }),
-      },
-      {
-        label: 'DRI',
-        value: cachedValue('DRI', ratingToLegacyAttribute(blitz)),
-        evidence: cachedEvidence('DRI', { source: 'rating-fallback', sampleSize: 0 }),
-      },
-      {
-        label: 'DEF',
-        value: cachedValue('DEF', clamp(Math.round(40 + (100 - lossRate) * 0.6))),
-        evidence: cachedEvidence('DEF', { source: 'overall-record', sampleSize: 0, totalGames: total }),
-      },
-      {
-        label: 'PHY',
-        value: clamp(Math.round(
-          40 + 55 * (Math.log1p(Math.min(total, 2000)) / Math.log1p(2000)),
-        )),
-        evidence: { source: 'appearances', sampleSize: total },
-      },
-    ],
+    attributes: rawAttributes.map((attribute) => ({
+      ...attribute,
+      value: calibrateAttributeToOvr(attribute.value, ovr),
+    })),
   }
 }
 

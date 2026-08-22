@@ -48,7 +48,7 @@ npm run preview
 ## How it works
 
 - Fetches public profile and ratings from Chess.com, walking backward through monthly archives only when needed to collect the five most recent games.
-- Calculates OVR, SHO, PHY, peak rating, form, and position from the existing live profile data. SHO discounts tactics evidence that is implausibly far below the player's current playing strength.
+- Calculates OVR, SHO, PHY, peak rating, form, and position from the existing live profile data. Each face attribute is calibrated around the selected format's Elo-derived OVR, while SHO discounts tactics evidence that is implausibly far below the player's current playing strength.
 - Calculates PAC, PAS, DRI, and DEF for every available time control in one shared rolling-window request before opening the report. Sparse formats extend backward only until 20 games are found, with a hard limit of 24 months.
 - Changes the card finish across bronze, silver, gold, and special OVR tiers.
 - Supports two-player comparisons, Puzzle Rush skill moves, six-stat position inference, opening-style verdict flavor, and a pack-opening reveal.

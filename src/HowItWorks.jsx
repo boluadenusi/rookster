@@ -62,7 +62,7 @@ export default function HowItWorks() {
           <div>
             <span className="section-kicker">SCOUTING ATTRIBUTES</span>
             <h2>Six football-style grades. One consistent model.</h2>
-            <p>Each grade runs from 40 to 95 and changes with the selected format where the evidence differs.</p>
+            <p>Each grade runs from 40 to 95. The selected format's OVR sets the baseline, while performance evidence moves individual grades above or below it.</p>
           </div>
           <dl>
             {attributes.map(([label, description]) => (
@@ -82,8 +82,8 @@ export default function HowItWorks() {
           </article>
           <article>
             <span>REPORT CALLS</span>
-            <h3>Strengths must clear the line</h3>
-            <p>Grades of 75+ can become key strengths; grades of 64 or below can become development areas.</p>
+            <h3>Strengths must stand apart</h3>
+            <p>Key strengths and development areas are judged relative to the player's OVR, so every level can show a credible individual profile.</p>
           </article>
           <article>
             <span>CARD CLASS</span>
