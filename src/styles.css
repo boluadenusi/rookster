@@ -826,7 +826,7 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
 .hero h1 { margin: 26px 0 0; max-width: 720px; }
 .hero-copy > p { max-width: 525px; color: rgba(244,241,233,.57); font-size: 16px; line-height: 1.9; }
 
-/* The right-hand showcase: a full-height, perpetual scouting-card dial. */
+/* The right-hand showcase: a restrained, showroom-style card carousel. */
 .homepage-card-dial {
   position: relative;
   top: auto;
@@ -835,9 +835,23 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
   height: 100%;
   min-height: 0;
   z-index: 1;
-  overflow: hidden;
+  isolation: isolate;
+  overflow: visible;
   pointer-events: none;
   transform: none;
+}
+.homepage-card-dial::before {
+  content: '';
+  position: absolute;
+  right: 7%;
+  bottom: 9%;
+  left: 7%;
+  z-index: -1;
+  height: 11%;
+  border-radius: 50%;
+  background: rgba(0,0,0,.82);
+  box-shadow: 0 28px 60px 18px rgba(0,0,0,.78);
+  filter: blur(12px);
 }
 .homepage-card-dial-loading { display: grid; place-items: center; }
 .homepage-card-dial-loading > span {
@@ -846,79 +860,91 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
   letter-spacing: .13em;
   text-transform: uppercase;
 }
-.homepage-card-dial-loading .featured-rook-loader {
-  position: relative;
-  display: block;
-  width: 148px;
-  height: 42px;
-  color: var(--acid);
-}
-.featured-rook-track {
-  position: absolute;
-  right: 0;
-  bottom: 7px;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(200,244,90,.26) 12%, rgba(200,244,90,.26) 88%, transparent);
-}
-.featured-rook-loader b {
-  position: absolute;
-  bottom: 8px;
-  left: 0;
+.homepage-card-dial-loading .featured-box-loader {
   display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  color: var(--acid);
-  font: 400 25px/1 Georgia, serif;
-  filter: drop-shadow(0 5px 9px rgba(200,244,90,.16));
-  transform: translateX(0);
-  animation: featuredRookRun 1.7s cubic-bezier(.65,0,.35,1) infinite alternate;
+  width: 34px;
+  height: 34px;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4px;
+  filter: drop-shadow(0 0 13px rgba(200,244,90,.13));
+  animation: featuredBoxSpin 1.35s cubic-bezier(.65,0,.35,1) infinite;
 }
-@keyframes featuredRookRun {
-  to { transform: translateX(120px); }
+.featured-box-loader i {
+  display: block;
+  border: 1px solid rgba(200,244,90,.48);
+  background: rgba(200,244,90,.16);
+  animation: featuredBoxPulse 1.35s ease-in-out infinite;
+}
+.featured-box-loader i:nth-child(2) { animation-delay: -.9s; }
+.featured-box-loader i:nth-child(3) { animation-delay: -.45s; }
+.featured-box-loader i:nth-child(4) { animation-delay: -.675s; }
+@keyframes featuredBoxSpin {
+  0%, 12% { transform: rotate(0deg); }
+  25%, 37% { transform: rotate(90deg); }
+  50%, 62% { transform: rotate(180deg); }
+  75%, 87% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes featuredBoxPulse {
+  0%, 100% { background: rgba(200,244,90,.12); opacity: .42; }
+  50% { background: rgba(200,244,90,.82); opacity: 1; }
 }
 .homepage-card-dial-track {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: calc(100% - 50px);
+  inset: 0 0 72px;
+  transform: translateY(22px);
 }
-.homepage-dial-pointer {
+.homepage-showroom-light {
   position: absolute;
-  top: 50%;
-  left: calc(50% + 106px);
-  z-index: 7;
-  width: 43px;
-  height: 32px;
-  overflow: hidden;
+  top: 4%;
+  right: 8%;
+  bottom: 14%;
+  left: 8%;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(244,232,216,.11), transparent 42%),
+    linear-gradient(90deg, transparent 10%, rgba(244,232,216,.025) 50%, transparent 90%);
+  filter: blur(8px);
+}
+.homepage-showroom-platform {
+  position: absolute;
+  right: 1%;
+  bottom: 54px;
+  left: 1%;
+  z-index: 0;
+  height: 116px;
   pointer-events: none;
-  transform: translateY(-50%);
+  filter: drop-shadow(0 24px 20px rgba(0,0,0,.64));
 }
-.homepage-dial-tick {
+.homepage-showroom-platform > span {
   position: absolute;
-  top: 50%;
-  right: 2px;
-  width: 10px;
-  height: 2px;
-  background: rgba(244,241,233,.3);
-  transform-origin: 100% 50%;
-  transition:
-    transform 1s cubic-bezier(.32,.72,.12,1),
-    width 1s cubic-bezier(.32,.72,.12,1),
-    background-color 1s ease;
+  left: 50%;
+  display: block;
+  border-radius: 50%;
+  transform: translateX(-50%);
 }
-.homepage-card-dial.is-resetting .homepage-dial-tick { transition: none; }
-.homepage-dial-tick.dial-above { transform: translateY(calc(-50% - 18px)); }
-.homepage-dial-tick.dial-top { transform: translateY(calc(-50% - 9px)); }
-.homepage-dial-tick.dial-center {
-  width: 31px;
-  background: rgba(200,244,90,.88);
-  transform: translateY(-50%);
+.homepage-showroom-platform-base {
+  bottom: 0;
+  width: 86%;
+  height: 58px;
+  border: 1px solid rgba(244,232,216,.065);
+  background: linear-gradient(180deg, rgba(26,27,24,.94), rgba(3,3,3,.98) 60%);
+  box-shadow:
+    inset 0 -11px 18px rgba(0,0,0,.9),
+    0 16px 25px rgba(0,0,0,.62);
 }
-.homepage-dial-tick.dial-bottom { transform: translateY(calc(-50% + 9px)); }
-.homepage-dial-tick.dial-below { transform: translateY(calc(-50% + 18px)); }
+.homepage-showroom-platform-deck {
+  bottom: 20px;
+  width: 96%;
+  height: 76px;
+  border: 1px solid rgba(244,232,216,.12);
+  background: radial-gradient(ellipse at center, rgba(200,244,90,.045) 0 8%, rgba(17,18,16,.95) 38%, rgba(5,5,5,.98) 72%);
+  box-shadow:
+    inset 0 0 34px rgba(244,232,216,.035),
+    inset 0 -8px 16px rgba(0,0,0,.55),
+    0 7px 13px rgba(0,0,0,.42);
+}
 .hero-copy,
 .generator-form { z-index: 2; }
 .homepage-specimen {
@@ -927,14 +953,15 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
   left: 50%;
   width: 246px;
   height: 392px;
-  z-index: 1;
-  opacity: 1;
-  filter: saturate(.82) brightness(.88);
+  z-index: 0;
+  opacity: 0;
+  filter: saturate(.55) brightness(.58);
   transform-origin: 50% 50%;
   transition:
-    transform 1s cubic-bezier(.32,.72,.12,1),
-    filter 1s ease;
-  will-change: transform;
+    transform .9s cubic-bezier(.22,.72,.16,1),
+    filter .7s ease,
+    opacity .7s ease;
+  will-change: transform, opacity;
 }
 .homepage-specimen-scale {
   width: 424px;
@@ -956,34 +983,92 @@ footer > span { color: #8e9a95; font-weight: 800; font-size: 14px; }
   inset: 0;
   z-index: 8;
   display: block;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: pointer;
 }
 .homepage-specimen-link:focus-visible {
   outline: 2px solid rgba(200,244,90,.86);
   outline-offset: 4px;
 }
-.homepage-card-dial-track.is-resetting .homepage-specimen { transition: none; }
-.homepage-specimen.dial-above {
-  z-index: 0;
-  transform: translate(-50%, calc(-50% - 616px)) scale(.4);
-}
-.homepage-specimen.dial-top {
-  z-index: 1;
-  transform: translate(-50%, calc(-50% - 308px)) scale(.46);
-}
-.homepage-specimen.dial-center {
+.homepage-specimen.showroom-center {
   z-index: 4;
+  opacity: 1;
   filter: saturate(1) brightness(1);
-  transform: translate(-50%, -50%) scale(1.06);
+  transform: translate(-50%, -52%) scale(1.13);
 }
-.homepage-specimen.dial-bottom {
+.homepage-specimen.showroom-center .homepage-specimen-link { pointer-events: auto; }
+.homepage-specimen.showroom-left,
+.homepage-specimen.showroom-right {
   z-index: 1;
-  transform: translate(-50%, calc(-50% + 308px)) scale(.46);
+  opacity: .43;
+  filter: saturate(.58) brightness(.62);
 }
-.homepage-specimen.dial-below {
+.homepage-specimen.showroom-left {
+  transform: translate(calc(-50% - 152px), calc(-50% + 9px)) scale(.76) perspective(900px) rotateY(8deg) rotateZ(-.7deg);
+}
+.homepage-specimen.showroom-right {
+  transform: translate(calc(-50% + 152px), calc(-50% + 9px)) scale(.76) perspective(900px) rotateY(-8deg) rotateZ(.7deg);
+}
+.homepage-specimen.showroom-hidden {
   z-index: 0;
-  transform: translate(-50%, calc(-50% + 616px)) scale(.4);
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 30px)) scale(.58);
+}
+.homepage-showroom-controls {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 36px;
+  padding: 3px 7px;
+  border: 1px solid rgba(244,232,216,.1);
+  border-radius: 999px;
+  background: rgba(5,5,5,.54);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+.homepage-showroom-controls > button {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(244,241,233,.44);
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease;
+}
+.homepage-showroom-controls > button:hover,
+.homepage-showroom-controls > button:focus-visible {
+  background: rgba(244,232,216,.055);
+  color: var(--acid);
+  outline: none;
+}
+.homepage-showroom-dots { display: flex; align-items: center; gap: 8px; }
+.homepage-showroom-dots button {
+  width: 5px;
+  height: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(244,241,233,.27);
+  cursor: pointer;
+  transition: width .25s ease, border-radius .25s ease, background-color .25s ease;
+}
+.homepage-showroom-dots button.is-active {
+  width: 19px;
+  border-radius: 5px;
+  background: rgba(200,244,90,.86);
+}
+.homepage-showroom-dots button:focus-visible {
+  outline: 1px solid var(--acid);
+  outline-offset: 3px;
 }
 .generator-form {
   width: min(100%, 560px);
@@ -1252,20 +1337,13 @@ footer > span { margin-left: 5px; color: rgba(244,241,233,.45); }
     height: 351px;
   }
   .homepage-specimen-scale { transform: scale(.52); }
-  .homepage-specimen.dial-above {
-    transform: translate(-50%, calc(-50% - 536px)) scale(.38);
+  .homepage-specimen.showroom-center { transform: translate(-50%, -52%) scale(1.11); }
+  .homepage-specimen.showroom-left {
+    transform: translate(calc(-50% - 136px), calc(-50% + 8px)) scale(.75) perspective(900px) rotateY(8deg) rotateZ(-.7deg);
   }
-  .homepage-specimen.dial-top {
-    transform: translate(-50%, calc(-50% - 268px)) scale(.42);
+  .homepage-specimen.showroom-right {
+    transform: translate(calc(-50% + 136px), calc(-50% + 8px)) scale(.75) perspective(900px) rotateY(-8deg) rotateZ(.7deg);
   }
-  .homepage-specimen.dial-center { transform: translate(-50%, -50%) scale(1); }
-  .homepage-specimen.dial-bottom {
-    transform: translate(-50%, calc(-50% + 268px)) scale(.42);
-  }
-  .homepage-specimen.dial-below {
-    transform: translate(-50%, calc(-50% + 536px)) scale(.38);
-  }
-  .homepage-dial-pointer { left: calc(50% + 94px); }
 }
 
 @media (max-height: 800px) and (min-width: 781px) {
@@ -1282,20 +1360,13 @@ footer > span { margin-left: 5px; color: rgba(244,241,233,.45); }
     height: 297px;
   }
   .homepage-specimen-scale { transform: scale(.44); }
-  .homepage-specimen.dial-above {
-    transform: translate(-50%, calc(-50% - 456px)) scale(.34);
+  .homepage-specimen.showroom-center { transform: translate(-50%, -52%) scale(1.1); }
+  .homepage-specimen.showroom-left {
+    transform: translate(calc(-50% - 114px), calc(-50% + 7px)) scale(.74) perspective(900px) rotateY(8deg) rotateZ(-.7deg);
   }
-  .homepage-specimen.dial-top {
-    transform: translate(-50%, calc(-50% - 228px)) scale(.42);
+  .homepage-specimen.showroom-right {
+    transform: translate(calc(-50% + 114px), calc(-50% + 7px)) scale(.74) perspective(900px) rotateY(-8deg) rotateZ(.7deg);
   }
-  .homepage-specimen.dial-center { transform: translate(-50%, -50%) scale(1); }
-  .homepage-specimen.dial-bottom {
-    transform: translate(-50%, calc(-50% + 228px)) scale(.42);
-  }
-  .homepage-specimen.dial-below {
-    transform: translate(-50%, calc(-50% + 456px)) scale(.34);
-  }
-  .homepage-dial-pointer { left: calc(50% + 76px); }
 }
 
 @media (max-width: 1000px) {
@@ -1310,6 +1381,18 @@ footer > span { margin-left: 5px; color: rgba(244,241,233,.45); }
   }
   .hero h1 { font-size: 58px; }
   .generator-form { transform: rotate(-.12deg); }
+  .homepage-specimen {
+    width: 190px;
+    height: 303px;
+  }
+  .homepage-specimen-scale { transform: scale(.448); }
+  .homepage-specimen.showroom-center { transform: translate(-50%, -52%) scale(1.1); }
+  .homepage-specimen.showroom-left {
+    transform: translate(calc(-50% - 112px), calc(-50% + 7px)) scale(.72) perspective(900px) rotateY(8deg) rotateZ(-.7deg);
+  }
+  .homepage-specimen.showroom-right {
+    transform: translate(calc(-50% + 112px), calc(-50% + 7px)) scale(.72) perspective(900px) rotateY(-8deg) rotateZ(.7deg);
+  }
   .result-grid { grid-template-columns: 500px 1fr; gap: 42px; }
 }
 
@@ -1322,12 +1405,25 @@ footer > span { margin-left: 5px; color: rgba(244,241,233,.45); }
     height: auto;
     min-height: calc(100vh - 98px);
     grid-template-columns: 1fr;
-    gap: 74px;
+    gap: 48px;
     padding: 76px 0 120px;
     overflow: visible;
   }
   .hero-left { height: auto; }
-  .homepage-card-dial { display: none; }
+  .homepage-card-dial {
+    display: block;
+    width: min(100%, 520px);
+    height: 440px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .homepage-card-dial-track {
+    inset: 0 0 65px;
+    transform: translateY(10px);
+  }
+  .homepage-showroom-platform { right: 0; bottom: 49px; left: 0; height: 104px; }
+  .homepage-specimen.showroom-left,
+  .homepage-specimen.showroom-right { opacity: .34; }
   .hero-copy { transform: none; }
   .generator-form { transform: none; }
   .result-section { padding: 72px 0 120px; }
@@ -1345,6 +1441,21 @@ footer > span { margin-left: 5px; color: rgba(244,241,233,.45); }
   .hero h1 { font-size: clamp(48px, 14vw, 62px); }
   .generator-form { padding: 33px 24px 30px; }
   .form-heading { margin-bottom: 34px; }
+  .homepage-card-dial { height: 390px; }
+  .homepage-card-dial-track { inset: 0 0 60px; }
+  .homepage-specimen {
+    width: 165px;
+    height: 263px;
+  }
+  .homepage-specimen-scale { transform: scale(.389); }
+  .homepage-specimen.showroom-center { transform: translate(-50%, -52%) scale(1.12); }
+  .homepage-specimen.showroom-left {
+    transform: translate(calc(-50% - 88px), calc(-50% + 7px)) scale(.72) perspective(900px) rotateY(8deg) rotateZ(-.7deg);
+  }
+  .homepage-specimen.showroom-right {
+    transform: translate(calc(-50% + 88px), calc(-50% + 7px)) scale(.72) perspective(900px) rotateY(-8deg) rotateZ(.7deg);
+  }
+  .homepage-showroom-controls { bottom: 13px; }
   .result-section { padding-top: 54px; }
   footer { min-height: 120px; }
 }
@@ -1905,16 +2016,11 @@ footer > span { margin-left: 5px; color: rgba(244,241,233,.45); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .featured-rook-loader b { animation: none; transform: translateX(60px); }
+  .featured-box-loader,
+  .featured-box-loader i { animation: none; }
   .player-card { transform: scale(var(--card-scale)) !important; }
-  .homepage-dial-tick { display: none; transition: none; }
-  .homepage-dial-tick.dial-center { display: block; }
-  .homepage-card-dial .homepage-specimen { display: none; transition: none; }
-  .homepage-card-dial .dial-center {
-    display: block;
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.12);
-  }
+  .homepage-card-dial .homepage-specimen { transition: none; }
+  .homepage-showroom-dots button { transition: none; }
   .scouting-panel.scouting-entrance.is-revealed .scouting-heading,
   .scouting-panel.scouting-entrance.is-revealed .scouting-player-header,
   .scouting-panel.scouting-entrance.is-revealed .scouting-radar,

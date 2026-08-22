@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getFeaturedPlayers } from '../api.js'
 import { buildCardStats, getAvailableControls, getDefaultControl } from '../utils.js'
@@ -31,20 +32,18 @@ function loadFeaturedPlayers() {
   return featuredPlayersRequest
 }
 
-function dialSlot(index, activeIndex) {
-  const distance = index - activeIndex
-  if (distance <= -2) return 'dial-above'
-  if (distance === -1) return 'dial-top'
-  if (distance === 0) return 'dial-center'
-  if (distance === 1) return 'dial-bottom'
-  return 'dial-below'
+function showroomSlot(index, activeIndex, count) {
+  if (index === activeIndex) return 'showroom-center'
+  if (count > 2 && index === (activeIndex - 1 + count) % count) return 'showroom-left'
+  if (index === (activeIndex + 1) % count) return 'showroom-right'
+  return 'showroom-hidden'
 }
 
 export default function HomepageSpecimens() {
   const [specimens, setSpecimens] = useState([])
   const [loadComplete, setLoadComplete] = useState(false)
-  const [activeIndex, setActiveIndex] = useState(1)
-  const [isResetting, setIsResetting] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -59,37 +58,26 @@ export default function HomepageSpecimens() {
     return () => { mounted = false }
   }, [])
 
-  const loopedSpecimens = useMemo(() => {
-    if (!specimens.length) return []
-    return [specimens.at(-1), ...specimens, specimens[0], specimens[1] ?? specimens[0]]
-  }, [specimens])
-
   useEffect(() => {
-    if (specimens.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (
+      specimens.length < 2
+      || isPaused
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
       return undefined
     }
     const interval = window.setInterval(() => {
-      setActiveIndex((current) => current + 1)
-    }, 4000)
+      setActiveIndex((current) => (current + 1) % specimens.length)
+    }, 4800)
 
     return () => window.clearInterval(interval)
-  }, [specimens.length])
+  }, [isPaused, specimens.length])
 
-  useEffect(() => {
-    if (!specimens.length || activeIndex !== specimens.length + 1) return undefined
+  function moveActive(direction) {
+    setActiveIndex((current) => (current + direction + specimens.length) % specimens.length)
+  }
 
-    const reset = window.setTimeout(() => {
-      setIsResetting(true)
-      setActiveIndex(1)
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => setIsResetting(false))
-      })
-    }, 1050)
-
-    return () => window.clearTimeout(reset)
-  }, [activeIndex, specimens.length])
-
-  if (!loopedSpecimens.length) {
+  if (!specimens.length) {
     return (
       <div
         className="homepage-card-dial homepage-card-dial-loading"
@@ -98,9 +86,11 @@ export default function HomepageSpecimens() {
         {loadComplete ? (
           <span>Featured reports temporarily unavailable</span>
         ) : (
-          <span className="featured-rook-loader" aria-hidden="true">
-            <i className="featured-rook-track" />
-            <b>&#9820;</b>
+          <span className="featured-box-loader" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
           </span>
         )}
       </div>
@@ -109,17 +99,29 @@ export default function HomepageSpecimens() {
 
   return (
     <nav
-      className={`homepage-card-dial ${isResetting ? 'is-resetting' : ''}`}
+      className="homepage-card-dial"
       aria-label="Featured scout reports"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocusCapture={() => setIsPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setIsPaused(false)
+      }}
     >
-      <div className={`homepage-card-dial-track ${isResetting ? 'is-resetting' : ''}`}>
-        {loopedSpecimens.map((specimen, index) => {
-          const isClone = index === 0 || index > specimens.length
+      <div className="homepage-showroom-light" aria-hidden="true" />
+      <div className="homepage-showroom-platform" aria-hidden="true">
+        <span className="homepage-showroom-platform-base" />
+        <span className="homepage-showroom-platform-deck" />
+      </div>
+      <div className="homepage-card-dial-track">
+        {specimens.map((specimen, index) => {
+          const slot = showroomSlot(index, activeIndex, specimens.length)
+          const isActive = slot === 'showroom-center'
           return (
             <div
-              aria-hidden={isClone || undefined}
-              className={`homepage-specimen ${dialSlot(index, activeIndex)}`}
-              key={`${specimen.username}-${index}`}
+              aria-hidden={!isActive || undefined}
+              className={`homepage-specimen ${slot}`}
+              key={specimen.username}
             >
               <div className="homepage-specimen-scale" aria-hidden="true" inert="">
                 <Card
@@ -138,20 +140,32 @@ export default function HomepageSpecimens() {
                 to={`/${encodeURIComponent(specimen.profile.username)}`}
                 state={{ scoutingEntry: 'homepage-card' }}
                 aria-label={`Open ${specimen.profile.username}'s scout report`}
-                tabIndex={isClone ? -1 : 0}
+                tabIndex={isActive ? 0 : -1}
               />
             </div>
           )
         })}
       </div>
-      <span className="homepage-dial-pointer" aria-hidden="true">
-        {loopedSpecimens.map((specimen, index) => (
-          <span
-            className={`homepage-dial-tick ${dialSlot(index, activeIndex)}`}
-            key={`tick-${specimen.username}-${index}`}
-          />
-        ))}
-      </span>
+      <div className="homepage-showroom-controls">
+        <button type="button" onClick={() => moveActive(-1)} aria-label="Previous featured player">
+          <ChevronLeft size={15} />
+        </button>
+        <div className="homepage-showroom-dots" aria-label="Choose featured player">
+          {specimens.map((specimen, index) => (
+            <button
+              type="button"
+              className={index === activeIndex ? 'is-active' : ''}
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Show ${specimen.profile.username}`}
+              aria-current={index === activeIndex ? 'true' : undefined}
+              key={`dot-${specimen.username}`}
+            />
+          ))}
+        </div>
+        <button type="button" onClick={() => moveActive(1)} aria-label="Next featured player">
+          <ChevronRight size={15} />
+        </button>
+      </div>
     </nav>
   )
 }
